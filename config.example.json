@@ -1,0 +1,9 @@
+{
+  "swarmRoot": "C:\\path\\to\\agent-swarm-desktop\\deploy",
+  "swarmSrc": "C:\\path\\to\\agent-swarm-1.154.0",
+  "python": "C:\\Users\\you\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+  "edge": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+  "proxyPort": 18080,
+  "apiPort": 3013,
+  "uiPort": 5274
+}
