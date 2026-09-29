@@ -2,6 +2,36 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.2.0] — 2026-09-29
+
+### 修复
+
+- **容器重建后第一次派活必然超时**（`opencode session create timed out after 30000ms`）
+
+  根因：两处 opencode 缓存都在**容器可写层**里，`docker compose up` 重建容器就被清空，
+  下次派活又要重装插件（`npm install`）+ 拉模型列表，30 秒预算扛不住。
+
+  | 缓存 | 路径 | 处理 |
+  |---|---|---|
+  | opencode 数据（db / log / 模型列表） | `/home/worker/.local/share/opencode` | 挂卷 `swarm_opencode_{lead,w1,w2}` |
+  | 插件 node_modules | `/workspace/.opencode` | 挂卷 `swarm_ocws_{lead,w1,w2}` |
+
+  entrypoint 的 `permission-repair` 段同步扩展到 `/workspace/.opencode`。
+
+  > 这两个目录都不是 agent 的工作数据（agent 数据在 `/workspace/personal`，本来就有卷），
+  > 挂卷不会丢成果。
+
+### 已验证
+
+- 重建容器 → **第一次**派活 6 秒完成（`407 * 63 = 25641`，正确），不再有冷启动失败
+- 重建后两个卷的内容仍在（opencode 缓存 6 项、插件目录 4 项）
+- 全程任务答案正确：`121`(11×11) · `144`(12×12) · `25641`(407×63) · `49926`(314×159)
+
+### 文档
+
+- `docs/TROUBLESHOOTING.md` F2 改写为「已根治 + 原理」
+- `docs/OPENCODE-MCP.md` 冷启动一节同步更新
+
 ## [1.1.0] — 2026-09-29
 
 ### 新增

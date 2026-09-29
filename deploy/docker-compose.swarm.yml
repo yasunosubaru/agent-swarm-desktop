@@ -28,6 +28,7 @@ x-agent-entrypoint: &agent-entrypoint
     chown -R 1001:1001 /home/worker/.local/share/opencode 2>/dev/null || true
     chown -R 1001:1001 /home/worker/.config/opencode 2>/dev/null || true
     chown -R 1001:1001 /home/worker/.cache 2>/dev/null || true
+    chown -R 1001:1001 /workspace/.opencode 2>/dev/null || true
     exec /docker-entrypoint.sh "$$@"
   - --
 
@@ -184,7 +185,11 @@ services:
       - swarm_shared:/workspace/shared
       - swarm_lead:/workspace/personal
       - ./opencode-config/opencode.jsonc:/home/worker/.config/opencode/opencode.jsonc:ro
-      - ./opencode-config/auth.json:/home/worker/.local/share/opencode/auth.json:ro
+      - ./opencode-config/auth.json:/home/worker/.local/share/opencode/auth.json:ro
+      # opencode 的插件/模型/会话缓存放卷里：容器重建后不用重新冷启动
+      - swarm_opencode_lead:/home/worker/.local/share/opencode
+      # 插件的 node_modules 也在容器可写层里，重建即重装（>30s 会导致 session create 超时）
+      - swarm_ocws_lead:/workspace/.opencode
     restart: unless-stopped
 
   worker-1:
@@ -226,7 +231,11 @@ services:
       - swarm_shared:/workspace/shared
       - swarm_worker_1:/workspace/personal
       - ./opencode-config/opencode.jsonc:/home/worker/.config/opencode/opencode.jsonc:ro
-      - ./opencode-config/auth.json:/home/worker/.local/share/opencode/auth.json:ro
+      - ./opencode-config/auth.json:/home/worker/.local/share/opencode/auth.json:ro
+      # opencode 的插件/模型/会话缓存放卷里：容器重建后不用重新冷启动
+      - swarm_opencode_w1:/home/worker/.local/share/opencode
+      # 插件的 node_modules 也在容器可写层里，重建即重装（>30s 会导致 session create 超时）
+      - swarm_ocws_w1:/workspace/.opencode
     restart: unless-stopped
 
   worker-2:
@@ -268,7 +277,11 @@ services:
       - swarm_shared:/workspace/shared
       - swarm_worker_2:/workspace/personal
       - ./opencode-config/opencode.jsonc:/home/worker/.config/opencode/opencode.jsonc:ro
-      - ./opencode-config/auth.json:/home/worker/.local/share/opencode/auth.json:ro
+      - ./opencode-config/auth.json:/home/worker/.local/share/opencode/auth.json:ro
+      # opencode 的插件/模型/会话缓存放卷里：容器重建后不用重新冷启动
+      - swarm_opencode_w2:/home/worker/.local/share/opencode
+      # 插件的 node_modules 也在容器可写层里，重建即重装（>30s 会导致 session create 超时）
+      - swarm_ocws_w2:/workspace/.opencode
     restart: unless-stopped
 
 secrets:
@@ -284,3 +297,9 @@ volumes:
   swarm_lead:
   swarm_worker_1:
   swarm_worker_2:
+  swarm_opencode_lead:
+  swarm_opencode_w1:
+  swarm_opencode_w2:
+  swarm_ocws_lead:
+  swarm_ocws_w1:
+  swarm_ocws_w2:
