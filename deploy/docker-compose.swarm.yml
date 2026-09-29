@@ -22,6 +22,12 @@ x-agent-entrypoint: &agent-entrypoint
       printf '%s\n' "$$AGENT_ID" > "$$ID_FILE"
     fi
     export AGENT_ID
+    # permission-repair: the bind-mount of opencode-config/auth.json makes Docker
+    # create /home/worker/.local/share/opencode as root. If anything ever writes
+    # there as root, the worker (uid 1001) can no longer open opencode.log.
+    chown -R 1001:1001 /home/worker/.local/share/opencode 2>/dev/null || true
+    chown -R 1001:1001 /home/worker/.config/opencode 2>/dev/null || true
+    chown -R 1001:1001 /home/worker/.cache 2>/dev/null || true
     exec /docker-entrypoint.sh "$$@"
   - --
 
@@ -76,7 +82,9 @@ services:
       - S3_PROVIDER=minio
       - EMBEDDING_PROVIDER=local
     ports:
-      - "7433:7433"
+      # 容器内固定 7433；主机侧映射到 6433，避开 Windows/Hyper-V 动态保留段
+      # （常见冲突区间：7346-7445）。见 docs/TROUBLESHOOTING.md「端口被保留」。
+      - "6433:7433"
     volumes:
       - agent_fs_data:/data
     healthcheck:

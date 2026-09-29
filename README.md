@@ -33,6 +33,7 @@ GET /api/channels  →  404
 | 🖥️ **桌面控制台** | 五个状态灯（宿主代理 / Docker / API / AI 员工 / 仪表盘）、一键启动、停止、实时日志。深色主题、琥珀色强调。 |
 | 💬 **对话窗口** | 像聊天软件一样说话。**连续记忆**、**运行中可插话**、回车发送、点击复制。 |
 | 🔇 **无浏览器边框** | 用 Edge `--app` 模式打开，看起来就是原生应用。 |
+| 🔌 **接入 OpenCode** | 一条命令接上 OpenCode 的 MCP，之后**直接在 OpenCode 对话里派活**，6 个工具（发任务/查任务/中途插话/取消）。 |
 | 🔒 **单实例** | 重复点图标不会开出第二个窗口，只会把已有窗口切到前台。 |
 | 🛡️ **防误触** | “停止全部”有二次确认；关闭窗口不会停服务。 |
 
@@ -105,6 +106,35 @@ powershell -ExecutionPolicy Bypass -File .\verify.ps1
 
 ---
 
+## 接入 OpenCode（可选，但很好用）
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\mcp\connect-opencode.ps1
+```
+
+重启 OpenCode 之后，工具栏里会多出 6 个工具：
+
+```
+agent-swarm__send-task          派活
+agent-swarm__get-tasks          查任务
+agent-swarm__get-task-details   任务详情
+agent-swarm__steer-task         干活时插话
+agent-swarm__cancel-task        取消
+agent-swarm__task-action        挪 backlog
+```
+
+然后直接说人话就行：
+
+> 用 agent-swarm 派个活：把这个需求实现掉
+
+实测链路：`OpenCode → MCP(/mcp-user) → 任务池 → Coder 容器 → opencode → 结果回传`。
+
+> ⚠️ 新装后**第一次**派活大概率失败（`opencode session create timed out`），
+> 这是冷容器首次建会话要装插件拉模型、30 秒预算不够导致的，再发一次就好了。
+> 细节见 [OPENCODE-MCP.md](docs/OPENCODE-MCP.md)。
+
+---
+
 ## 目录结构
 
 ```
@@ -120,6 +150,8 @@ agent-swarm-desktop/
 │   ├── host_proxy.py         极简 HTTP CONNECT 代理（给 Docker VM 用）
 │   ├── make-icon.ps1         从 PNG 生成多尺寸 .ico
 │   └── create-shortcuts.ps1  创建两个桌面快捷方式
+├── mcp/
+│   └── connect-opencode.ps1  把 AI 团队接进 OpenCode（MCP 用户端点）
 ├── web/
 │   ├── chat.html             对话页（会被复制进 apps/ui/public/）
 │   └── swarm-config.example.js
@@ -132,6 +164,7 @@ agent-swarm-desktop/
 └── docs/
     ├── DEPLOYMENT.md         完整部署手册
     ├── CHAT.md               对话页原理（parentTaskId / steer / session-logs）
+    ├── OPENCODE-MCP.md       接入 OpenCode（含冷启动与属主两个坑）
     └── TROUBLESHOOTING.md    排障手册
 ```
 
@@ -160,6 +193,7 @@ agent-swarm-desktop/
 
 - [完整部署手册](docs/DEPLOYMENT.md)
 - [对话页是怎么工作的](docs/CHAT.md)
+- [接入 OpenCode（用户 MCP）](docs/OPENCODE-MCP.md)
 - [排障手册](docs/TROUBLESHOOTING.md)
 - 上游项目：[desplega-ai/agent-swarm](https://github.com/desplega-ai/agent-swarm)
 
