@@ -1,7 +1,7 @@
 # Minimal Agent Swarm deployment for local verification.
 # Services: minio + minio-init + agent-fs + api + lead + worker-1 + worker-2
 # Harness: HARNESS_PROVIDER=opencode, authenticated with the host OpenCode
-#          (commandcode) credentials bind-mounted from ./opencode-config.
+#          credentials bind-mounted from ./opencode-config.
 #
 # Usage:
 #   docker compose -f docker-compose.swarm.yml --env-file .env up -d
